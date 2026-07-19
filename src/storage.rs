@@ -84,3 +84,97 @@ impl Storage for JsonStorage {
 pub fn default_storage() -> Result<impl Storage> {
     Ok(JsonStorage::new(JsonStorage::default_path()?))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::model::{Store, Task};
+
+    fn temp_storage() -> (JsonStorage, tempfile::TempDir) {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("tasks.json");
+        (JsonStorage::new(path), dir)
+    }
+
+    #[test]
+    fn load_creates_file_if_missing() {
+        let (storage, _dir) = temp_storage();
+        assert!(!storage.path.exists());
+
+        let store = storage.load().unwrap();
+        assert_eq!(store.next_id, 1);
+        assert!(store.tasks.is_empty());
+
+        assert!(storage.path.exists(), "file should be created on load");
+    }
+
+    #[test]
+    fn save_then_load_roundtrip() {
+        let (storage, _dir) = temp_storage();
+        let mut store = Store::default();
+        store.tasks.push(Task {
+            id: 1,
+            description: "test".into(),
+            completed: false,
+            created_at: chrono::Utc::now(),
+        });
+        store.next_id = 2;
+
+        storage.save(&store).unwrap();
+        let loaded = storage.load().unwrap();
+
+        assert_eq!(loaded.next_id, 2);
+        assert_eq!(loaded.tasks.len(), 1);
+        assert_eq!(loaded.tasks[0].description, "test");
+    }
+
+    #[test]
+    fn save_creates_parent_dirs() {
+        let dir = tempfile::TempDir::new().unwrap();
+        let path = dir.path().join("nested").join("deep").join("tasks.json");
+        let storage = JsonStorage::new(path);
+
+        storage.save(&Store::default()).unwrap();
+        assert!(storage.path.exists());
+    }
+
+    #[test]
+    fn load_parses_existing_file() {
+        let (storage, _dir) = temp_storage();
+        let json = r#"{
+            "tasks": [
+                {
+                    "id": 1,
+                    "description": "existing",
+                    "completed": true,
+                    "created_at": "2026-01-01T00:00:00Z"
+                }
+            ],
+            "next_id": 2
+        }"#;
+        std::fs::write(&storage.path, json).unwrap();
+
+        let store = storage.load().unwrap();
+        assert_eq!(store.tasks.len(), 1);
+        assert_eq!(store.tasks[0].id, 1);
+        assert!(store.tasks[0].completed);
+        assert_eq!(store.next_id, 2);
+    }
+
+    #[test]
+    fn load_corrupt_file_returns_error() {
+        let (storage, _dir) = temp_storage();
+        std::fs::write(&storage.path, "not json").unwrap();
+        assert!(storage.load().is_err());
+    }
+
+    #[test]
+    fn save_is_atomic_no_tmp_left_behind() {
+        let (storage, _dir) = temp_storage();
+        storage.save(&Store::default()).unwrap();
+
+        let tmp = storage.path.with_extension("json.tmp");
+        assert!(!tmp.exists(), "temp file should not remain after save");
+        assert!(storage.path.exists());
+    }
+}

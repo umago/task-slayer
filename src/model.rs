@@ -15,7 +15,7 @@ pub struct Task {
 /// The counter is persisted separately from the task list so that IDs are never
 /// reused, even after all tasks have been deleted (see persistence rules).
 /// A bare array would lose the high-water mark once the list becomes empty.
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Store {
     pub tasks: Vec<Task>,
     pub next_id: u64,

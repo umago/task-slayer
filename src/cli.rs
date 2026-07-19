@@ -68,7 +68,6 @@ pub fn expand_selectors(selectors: &[String]) -> anyhow::Result<Vec<u64>> {
     ids.dedup();
     Ok(ids)
 }
-
 pub fn run() -> ExitCode {
     let cli = match Cli::try_parse() {
         Ok(c) => c,
@@ -89,5 +88,65 @@ pub fn run() -> ExitCode {
             eprintln!("tslay: {e}");
             ExitCode::FAILURE
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn selector_single_id() {
+        let s: Vec<String> = vec!["5".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![5]);
+    }
+
+    #[test]
+    fn selector_multiple_ids() {
+        let s: Vec<String> = vec!["1".into(), "4".into(), "8".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![1, 4, 8]);
+    }
+
+    #[test]
+    fn selector_range() {
+        let s: Vec<String> = vec!["3-7".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![3, 4, 5, 6, 7]);
+    }
+
+    #[test]
+    fn selector_mixed() {
+        let s: Vec<String> = vec!["1".into(), "3-5".into(), "8".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![1, 3, 4, 5, 8]);
+    }
+
+    #[test]
+    fn selector_dedup() {
+        let s: Vec<String> = vec!["1".into(), "1".into(), "1-3".into(), "2".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![1, 2, 3]);
+    }
+
+    #[test]
+    fn selector_range_single() {
+        // 5-5 should produce just [5]
+        let s: Vec<String> = vec!["5-5".into()];
+        assert_eq!(expand_selectors(&s).unwrap(), vec![5]);
+    }
+
+    #[test]
+    fn selector_invalid_id() {
+        let s: Vec<String> = vec!["abc".into()];
+        assert!(expand_selectors(&s).is_err());
+    }
+
+    #[test]
+    fn selector_reversed_range() {
+        let s: Vec<String> = vec!["5-2".into()];
+        assert!(expand_selectors(&s).is_err());
+    }
+
+    #[test]
+    fn selector_empty_string() {
+        let s: Vec<String> = vec!["".into()];
+        assert!(expand_selectors(&s).is_err());
     }
 }
