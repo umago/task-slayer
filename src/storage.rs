@@ -56,6 +56,12 @@ impl Storage for JsonStorage {
         }
         let bytes =
             fs::read(&self.path).with_context(|| format!("reading {}", self.path.display()))?;
+        if bytes.is_empty() {
+            // Empty file (e.g. created by `touch` or a failed write).
+            // Reinitialize it with a default store.
+            self.save(&Store::default())?;
+            return Ok(Store::default());
+        }
         let store: Store = serde_json::from_slice(&bytes)
             .with_context(|| format!("parsing {}", self.path.display()))?;
         Ok(store)
@@ -159,6 +165,21 @@ mod tests {
         assert_eq!(store.tasks[0].id, 1);
         assert!(store.tasks[0].completed);
         assert_eq!(store.next_id, 2);
+    }
+
+    #[test]
+    fn load_empty_file_reinitializes() {
+        let (storage, _dir) = temp_storage();
+        // Create an empty 0-byte file (e.g. from `touch` or a failed write)
+        std::fs::write(&storage.path, "").unwrap();
+
+        let store = storage.load().unwrap();
+        assert_eq!(store.next_id, 1);
+        assert!(store.tasks.is_empty());
+
+        // File should now contain valid JSON
+        let content = std::fs::read_to_string(&storage.path).unwrap();
+        assert!(content.contains("\"next_id\": 1"));
     }
 
     #[test]
