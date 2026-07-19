@@ -1,7 +1,7 @@
 //! Task repository: domain operations over the store.
 //!
 /// Commands talk to this layer, never to the JSON file directly.
-use anyhow::{anyhow, Result};
+use anyhow::{Result, anyhow};
 
 use crate::model::{Store, Task};
 use crate::storage::Storage;
@@ -26,7 +26,9 @@ impl<S: Storage> TaskRepository<S> {
     pub fn add(&self, description: impl Into<String>) -> Result<Task> {
         let mut store = self.load()?;
         let id = store.next_id;
-        store.next_id = id.checked_add(1).ok_or_else(|| anyhow!("ID counter overflow"))?;
+        store.next_id = id
+            .checked_add(1)
+            .ok_or_else(|| anyhow!("ID counter overflow"))?;
         let task = Task {
             id,
             description: description.into(),

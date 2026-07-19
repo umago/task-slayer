@@ -54,8 +54,8 @@ impl Storage for JsonStorage {
             self.save(&Store::default())?;
             return Ok(Store::default());
         }
-        let bytes = fs::read(&self.path)
-            .with_context(|| format!("reading {}", self.path.display()))?;
+        let bytes =
+            fs::read(&self.path).with_context(|| format!("reading {}", self.path.display()))?;
         let store: Store = serde_json::from_slice(&bytes)
             .with_context(|| format!("parsing {}", self.path.display()))?;
         Ok(store)

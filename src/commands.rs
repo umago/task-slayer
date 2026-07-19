@@ -3,8 +3,8 @@ use anyhow::Result;
 
 use crate::cli::{self, Command};
 use crate::repository::TaskRepository;
-use crate::storage::default_storage;
 use crate::storage::Storage;
+use crate::storage::default_storage;
 
 pub fn dispatch(command: Option<Command>) -> Result<()> {
     let repo = TaskRepository::new(default_storage()?);
@@ -73,7 +73,11 @@ fn print_pending(tasks: &[crate::model::Task]) {
         println!("{:width$} {}", t.id, t.description, width = w);
     }
     println!();
-    println!("{} {}.", tasks.len(), if tasks.len() == 1 { "task" } else { "tasks" });
+    println!(
+        "{} {}.",
+        tasks.len(),
+        if tasks.len() == 1 { "task" } else { "tasks" }
+    );
 }
 
 fn print_all(tasks: &[crate::model::Task]) {
@@ -85,11 +89,20 @@ fn print_all(tasks: &[crate::model::Task]) {
         println!("{:width$} {:<1} {}", t.id, mark, t.description, width = w);
     }
     println!();
-    println!("{} {}.", tasks.len(), if tasks.len() == 1 { "task" } else { "tasks" });
+    println!(
+        "{} {}.",
+        tasks.len(),
+        if tasks.len() == 1 { "task" } else { "tasks" }
+    );
 }
 
 fn print_marked(action: &str, n: usize) {
-    println!("Marked {} {} {}.", n, if n == 1 { "task" } else { "tasks" }, action);
+    println!(
+        "Marked {} {} {}.",
+        n,
+        if n == 1 { "task" } else { "tasks" },
+        action
+    );
 }
 
 fn print_removed(n: usize) {

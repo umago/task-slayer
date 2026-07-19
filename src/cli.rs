@@ -46,7 +46,9 @@ pub enum Command {
 /// Duplicate ids are deduplicated by the caller.
 fn parse_selector(s: &str) -> Result<Vec<u64>, String> {
     if let Some((a, b)) = s.split_once('-') {
-        let lo: u64 = a.parse().map_err(|_| format!("invalid range start: {a:?}"))?;
+        let lo: u64 = a
+            .parse()
+            .map_err(|_| format!("invalid range start: {a:?}"))?;
         let hi: u64 = b.parse().map_err(|_| format!("invalid range end: {b:?}"))?;
         if hi < lo {
             return Err(format!("range end is less than start: {s}"));
