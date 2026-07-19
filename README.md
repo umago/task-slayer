@@ -1,6 +1,6 @@
 # Task Slayer
 
-A small, fast, native Linux command-line todo manager.
+A small, fast CLI task-slaying tool. Track your quests, slay your tasks.
 
 ## Install
 
