@@ -12,6 +12,7 @@ pub fn dispatch(command: Option<Command>) -> Result<()> {
     match command {
         None => list_pending(&repo),
         Some(Command::Add { description }) => add(&repo, description),
+        Some(Command::Edit { id, description }) => edit(&repo, id, description),
         Some(Command::All) => list_all(&repo),
         Some(Command::Done { selectors }) => set_completed(&repo, &selectors, true),
         Some(Command::Undo { selectors }) => set_completed(&repo, &selectors, false),
@@ -22,6 +23,12 @@ pub fn dispatch(command: Option<Command>) -> Result<()> {
 fn add<S: Storage>(repo: &TaskRepository<S>, description: String) -> Result<()> {
     let task = repo.add(description)?;
     println!("Created task {}.", task.id);
+    Ok(())
+}
+
+fn edit<S: Storage>(repo: &TaskRepository<S>, id: u64, description: String) -> Result<()> {
+    let task = repo.edit_task(id, description)?;
+    println!("Updated task {}.", task.id);
     Ok(())
 }
 
