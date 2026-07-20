@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
@@ -22,7 +24,7 @@ jobs:
           targets: x86_64-unknown-linux-gnu
 
       - name: Build
-        run: cargo build --release --target x86_64-unknown-linux-gnu
+        run: TSLAY_VERSION=$(git describe --tags --always --dirty) cargo build --release --target x86_64-unknown-linux-gnu
 
       - name: Create GitHub Release
         env:

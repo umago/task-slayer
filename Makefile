@@ -8,10 +8,10 @@ VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 all: build
 
 build:
-	cargo build --release
+	TSLAY_VERSION=$(VERSION) cargo build --release
 
 install:
-	cargo install --path .
+	TSLAY_VERSION=$(VERSION) cargo install --path .
 
 fmt:
 	cargo fmt

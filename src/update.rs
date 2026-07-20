@@ -29,9 +29,6 @@ const MAX_BINARY_SIZE: u64 = 10 << 20;
 /// Asset name to find in the release.
 const ASSET_NAME: &str = "tslay";
 
-/// User-Agent header value for the GitHub API request.
-const USER_AGENT: &str = concat!("tslay/", env!("CARGO_PKG_VERSION"));
-
 #[derive(serde::Deserialize)]
 struct GitHubRelease {
     tag_name: String,
@@ -87,7 +84,7 @@ pub fn run() -> Result<()> {
 
     println!(
         "tslay updated successfully ({} → {}).",
-        env!("CARGO_PKG_VERSION"),
+        crate::VERSION,
         release.tag_name
     );
     Ok(())
@@ -98,7 +95,7 @@ fn fetch_latest_release(agent: &ureq::Agent) -> Result<GitHubRelease> {
     let resp = agent
         .get(RELEASES_API)
         .header("Accept", "application/vnd.github+json")
-        .header("User-Agent", USER_AGENT)
+        .header("User-Agent", &format!("tslay/{}", crate::VERSION))
         .call()
         .context("failed to fetch latest release")?;
 
@@ -120,7 +117,7 @@ fn find_asset<'a>(assets: &'a [GitHubAsset], name: &str) -> Option<&'a GitHubAss
 fn download_asset(agent: &ureq::Agent, url: &str) -> Result<Vec<u8>> {
     let resp = agent
         .get(url)
-        .header("User-Agent", USER_AGENT)
+        .header("User-Agent", &format!("tslay/{}", crate::VERSION))
         .call()
         .context("failed to download binary")?;
 
