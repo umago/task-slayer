@@ -4,6 +4,15 @@ A small, fast CLI task-slaying tool. Track your quests, slay your tasks.
 
 ## Install
 
+### From GitHub Releases (recommended)
+
+```bash
+curl -Lo ~/.local/bin/tslay https://github.com/umago/task-slayer/releases/latest/download/tslay
+chmod +x ~/.local/bin/tslay
+```
+
+### From source
+
 ```bash
 cargo install --path .
 ```
