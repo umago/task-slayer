@@ -46,6 +46,8 @@ pub enum Command {
         #[arg(num_args = 1..)]
         selectors: Vec<String>,
     },
+    /// Self-update: download and install the latest release from GitHub.
+    Update,
 }
 
 /// Parse a single selector token, which may be a single id (`5`) or a
