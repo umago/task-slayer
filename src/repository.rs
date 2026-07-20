@@ -104,6 +104,28 @@ impl<S: Storage> TaskRepository<S> {
         self.mutate(ids, |t| t.completed = completed)
     }
 
+    /// Replace a single task's description.
+    ///
+    /// Unlike `set_completed`/`remove`, `edit` targets exactly one task — a
+    /// new description is meaningless to apply across many. Unknown ids
+    /// produce `task id not found: N`, matching the wording used by `mutate`.
+    pub fn edit_task(&self, id: u64, description: impl Into<String>) -> Result<Task> {
+        let description: String = description.into();
+        if description.trim().is_empty() {
+            return Err(anyhow!("description cannot be empty"));
+        }
+        let mut store = self.load()?;
+        let task = store
+            .tasks
+            .iter_mut()
+            .find(|t| t.id == id)
+            .ok_or_else(|| anyhow!("task id not found: {id}"))?;
+        task.description = description;
+        let updated = task.clone();
+        self.save(&store)?;
+        Ok(updated)
+    }
+
     pub fn remove(&self, ids: &[u64]) -> Result<Vec<u64>> {
         let target = self.resolve_ids(ids);
         if target.is_empty() {
@@ -253,6 +275,27 @@ mod tests {
         assert_eq!(all.len(), 2);
         assert_eq!(all[0].id, 1);
         assert_eq!(all[1].id, 3);
+    }
+
+    #[test]
+    fn edit_updates_description() {
+        let r = repo();
+        r.add("original").unwrap();
+
+        let updated = r.edit_task(1, "revised").unwrap();
+        assert_eq!(updated.id, 1);
+        assert_eq!(updated.description, "revised");
+        assert!(!updated.completed, "edit must not touch completed");
+
+        let all = r.list_all().unwrap();
+        assert_eq!(all[0].description, "revised");
+    }
+
+    #[test]
+    fn edit_nonexistent_returns_error() {
+        let r = repo();
+        r.add("a").unwrap();
+        assert!(r.edit_task(99, "x").is_err());
     }
 
     #[test]

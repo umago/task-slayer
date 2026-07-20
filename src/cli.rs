@@ -22,6 +22,13 @@ pub enum Command {
         /// The task description.
         description: String,
     },
+    /// Edit a task's description.
+    Edit {
+        /// The id of the task to edit.
+        id: u64,
+        /// The new task description.
+        description: String,
+    },
     /// List all tasks, including completed ones.
     All,
     /// Mark tasks as done. Accepts ids and ranges, e.g. `1 3-5 8`.
