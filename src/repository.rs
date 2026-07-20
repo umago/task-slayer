@@ -24,6 +24,10 @@ impl<S: Storage> TaskRepository<S> {
     }
 
     pub fn add(&self, description: impl Into<String>) -> Result<Task> {
+        let description: String = description.into();
+        if description.trim().is_empty() {
+            return Err(anyhow!("description cannot be empty"));
+        }
         let mut store = self.load()?;
         let id = store.next_id;
         store.next_id = id
@@ -31,7 +35,7 @@ impl<S: Storage> TaskRepository<S> {
             .ok_or_else(|| anyhow!("ID counter overflow"))?;
         let task = Task {
             id,
-            description: description.into(),
+            description,
             completed: false,
             created_at: chrono::Utc::now(),
         };
@@ -54,6 +58,8 @@ impl<S: Storage> TaskRepository<S> {
         Ok(tasks)
     }
 
+    // Defensive guard: the CLI deduplicates via expand_selectors, but direct
+    // callers (tests, future API) may not.
     fn resolve_ids(&self, ids: &[u64]) -> Vec<u64> {
         let mut v: Vec<u64> = ids.to_vec();
         v.sort_unstable();
@@ -82,6 +88,14 @@ impl<S: Storage> TaskRepository<S> {
         if touched.is_empty() {
             return Err(anyhow!("no tasks matched the given ids"));
         }
+        if touched.len() != target.len() {
+            let missing: Vec<String> = target
+                .iter()
+                .filter(|id| !touched.contains(id))
+                .map(|id| id.to_string())
+                .collect();
+            return Err(anyhow!("task ids not found: {}", missing.join(", ")));
+        }
         self.save(&store)?;
         Ok(touched)
     }
@@ -96,14 +110,28 @@ impl<S: Storage> TaskRepository<S> {
             return Err(anyhow!("no task ids given"));
         }
         let mut store = self.load()?;
-        let before = store.tasks.len();
-        store.tasks.retain(|t| target.binary_search(&t.id).is_err());
-        let removed = before - store.tasks.len();
-        if removed == 0 {
+        let mut touched = Vec::new();
+        store.tasks.retain(|t| {
+            if target.binary_search(&t.id).is_ok() {
+                touched.push(t.id);
+                false
+            } else {
+                true
+            }
+        });
+        if touched.is_empty() {
             return Err(anyhow!("no tasks matched the given ids"));
         }
+        if touched.len() != target.len() {
+            let missing: Vec<String> = target
+                .iter()
+                .filter(|id| !touched.contains(id))
+                .map(|id| id.to_string())
+                .collect();
+            return Err(anyhow!("task ids not found: {}", missing.join(", ")));
+        }
         self.save(&store)?;
-        Ok(target.iter().copied().take(removed).collect())
+        Ok(touched)
     }
 }
 

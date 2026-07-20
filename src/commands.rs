@@ -66,6 +66,10 @@ fn id_width(tasks: &[crate::model::Task]) -> usize {
 }
 
 fn print_pending(tasks: &[crate::model::Task]) {
+    if tasks.is_empty() {
+        println!("0 tasks.");
+        return;
+    }
     let w = id_width(tasks);
     println!("{:width$} Description", "ID", width = w);
     println!("{:width$} -----------", "-".repeat(w), width = w);
@@ -81,6 +85,10 @@ fn print_pending(tasks: &[crate::model::Task]) {
 }
 
 fn print_all(tasks: &[crate::model::Task]) {
+    if tasks.is_empty() {
+        println!("0 tasks.");
+        return;
+    }
     let w = id_width(tasks);
     println!("{:width$} ✓ Description", "ID", width = w);
     println!("{:width$} - -----------", "-".repeat(w), width = w);

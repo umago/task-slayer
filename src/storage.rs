@@ -49,17 +49,11 @@ impl JsonStorage {
 impl Storage for JsonStorage {
     fn load(&self) -> Result<Store> {
         if !self.path.exists() {
-            // Spec: create the directory and file automatically if they
-            // do not exist, even for read-only commands.
-            self.save(&Store::default())?;
             return Ok(Store::default());
         }
         let bytes =
             fs::read(&self.path).with_context(|| format!("reading {}", self.path.display()))?;
         if bytes.is_empty() {
-            // Empty file (e.g. created by `touch` or a failed write).
-            // Reinitialize it with a default store.
-            self.save(&Store::default())?;
             return Ok(Store::default());
         }
         let store: Store = serde_json::from_slice(&bytes)
@@ -103,15 +97,12 @@ mod tests {
     }
 
     #[test]
-    fn load_creates_file_if_missing() {
+    fn load_missing_file_returns_default() {
         let (storage, _dir) = temp_storage();
-        assert!(!storage.path.exists());
-
         let store = storage.load().unwrap();
         assert_eq!(store.next_id, 1);
         assert!(store.tasks.is_empty());
-
-        assert!(storage.path.exists(), "file should be created on load");
+        assert!(!storage.path.exists(), "load should not create the file");
     }
 
     #[test]
@@ -168,18 +159,13 @@ mod tests {
     }
 
     #[test]
-    fn load_empty_file_reinitializes() {
+    fn load_empty_file_returns_default() {
         let (storage, _dir) = temp_storage();
-        // Create an empty 0-byte file (e.g. from `touch` or a failed write)
         std::fs::write(&storage.path, "").unwrap();
 
         let store = storage.load().unwrap();
         assert_eq!(store.next_id, 1);
         assert!(store.tasks.is_empty());
-
-        // File should now contain valid JSON
-        let content = std::fs::read_to_string(&storage.path).unwrap();
-        assert!(content.contains("\"next_id\": 1"));
     }
 
     #[test]
