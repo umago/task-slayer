@@ -36,6 +36,16 @@ tslay add "Buy milk"
 Created task 1.
 ```
 
+### Edit a task
+
+```bash
+tslay edit 1 "Buy oat milk"
+```
+
+```
+Updated task 1.
+```
+
 ### List pending tasks (default)
 
 ```bash
@@ -45,7 +55,7 @@ tslay
 ```
 ID Description
 -- -----------
-1  Buy milk
+1  Buy oat milk
 2  Buy eggs
 
 2 tasks.
@@ -60,7 +70,7 @@ tslay all
 ```
 ID ✓ Description
 -- - -----------
-1  ✓ Buy milk
+1  ✓ Buy oat milk
 2    Buy eggs
 
 2 tasks.
