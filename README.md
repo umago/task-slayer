@@ -24,6 +24,16 @@ cargo build --release
 cp target/release/tslay ~/.local/bin/
 ```
 
+## Update
+
+To update `tslay` to the latest release:
+
+```sh
+tslay update
+```
+
+This downloads the latest binary from [GitHub releases](https://github.com/umago/task-slayer/releases), verifies its SHA-256 digest, and replaces the running binary in-place.
+
 ## Usage
 
 ### Add a task

@@ -7,6 +7,10 @@ use crate::storage::Storage;
 use crate::storage::default_storage;
 
 pub fn dispatch(command: Option<Command>) -> Result<()> {
+    if let Some(Command::Update) = command {
+        return crate::update::run();
+    }
+
     let repo = TaskRepository::new(default_storage()?);
 
     match command {
@@ -17,9 +21,9 @@ pub fn dispatch(command: Option<Command>) -> Result<()> {
         Some(Command::Done { selectors }) => set_completed(&repo, &selectors, true),
         Some(Command::Undo { selectors }) => set_completed(&repo, &selectors, false),
         Some(Command::Rm { selectors }) => remove(&repo, &selectors),
+        Some(Command::Update) => unreachable!(),
     }
 }
-
 fn add<S: Storage>(repo: &TaskRepository<S>, description: String) -> Result<()> {
     let task = repo.add(description)?;
     println!("Created task {}.", task.id);
