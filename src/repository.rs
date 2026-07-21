@@ -126,6 +126,23 @@ impl<S: Storage> TaskRepository<S> {
         Ok(updated)
     }
 
+    /// Renumber all tasks sequentially starting from 1, preserving their
+    /// relative order.  Returns the number of tasks that were renumbered
+    /// (0 when the store is empty — nothing to compact).
+    pub fn compact(&self) -> Result<usize> {
+        let mut store = self.load()?;
+        if store.tasks.is_empty() {
+            return Ok(0);
+        }
+        store.tasks.sort_by_key(|t| t.id);
+        for (i, task) in store.tasks.iter_mut().enumerate() {
+            task.id = (i as u64) + 1;
+        }
+        store.next_id = (store.tasks.len() as u64) + 1;
+        self.save(&store)?;
+        Ok(store.tasks.len())
+    }
+
     pub fn remove(&self, ids: &[u64]) -> Result<Vec<u64>> {
         let target = self.resolve_ids(ids);
         if target.is_empty() {
@@ -357,5 +374,90 @@ mod tests {
         assert_eq!(pending.len(), 2);
         assert_eq!(pending[0].id, 1);
         assert_eq!(pending[1].id, 5);
+    }
+
+    #[test]
+    fn compact_renumbers_tasks() {
+        let r = repo();
+        r.add("a").unwrap(); // 1
+        r.add("b").unwrap(); // 2
+        r.add("c").unwrap(); // 3
+        r.remove(&[2]).unwrap();
+
+        let n = r.compact().unwrap();
+        assert_eq!(n, 2);
+
+        let all = r.list_all().unwrap();
+        assert_eq!(all[0].id, 1);
+        assert_eq!(all[0].description, "a");
+        assert_eq!(all[1].id, 2);
+        assert_eq!(all[1].description, "c");
+    }
+
+    #[test]
+    fn compact_resets_next_id() {
+        let r = repo();
+        r.add("a").unwrap();
+        r.add("b").unwrap();
+        r.add("c").unwrap();
+        r.remove(&[1, 2]).unwrap();
+
+        r.compact().unwrap();
+
+        let t = r.add("d").unwrap();
+        assert_eq!(
+            t.id, 2,
+            "next add after compact should use next_id = len + 1"
+        );
+    }
+
+    #[test]
+    fn compact_preserves_order() {
+        let r = repo();
+        for i in 1..=5 {
+            r.add(format!("task {i}")).unwrap();
+        }
+        r.remove(&[2, 4]).unwrap();
+
+        r.compact().unwrap();
+
+        let all = r.list_all().unwrap();
+        assert_eq!(all.len(), 3);
+        assert_eq!(all[0].id, 1);
+        assert_eq!(all[0].description, "task 1");
+        assert_eq!(all[1].id, 2);
+        assert_eq!(all[1].description, "task 3");
+        assert_eq!(all[2].id, 3);
+        assert_eq!(all[2].description, "task 5");
+    }
+
+    #[test]
+    fn compact_empty_store_returns_zero() {
+        let r = repo();
+        let n = r.compact().unwrap();
+        assert_eq!(n, 0);
+
+        // next_id should remain 1
+        let t = r.add("first").unwrap();
+        assert_eq!(t.id, 1);
+    }
+
+    #[test]
+    fn compact_already_sequential_is_noop() {
+        let r = repo();
+        r.add("a").unwrap();
+        r.add("b").unwrap();
+        r.add("c").unwrap();
+
+        let n = r.compact().unwrap();
+        assert_eq!(n, 3);
+
+        let all = r.list_all().unwrap();
+        assert_eq!(all[0].id, 1);
+        assert_eq!(all[1].id, 2);
+        assert_eq!(all[2].id, 3);
+
+        let t = r.add("d").unwrap();
+        assert_eq!(t.id, 4);
     }
 }

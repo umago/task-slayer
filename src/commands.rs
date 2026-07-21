@@ -21,6 +21,7 @@ pub fn dispatch(command: Option<Command>) -> Result<()> {
         Some(Command::Done { selectors }) => set_completed(&repo, &selectors, true),
         Some(Command::Undo { selectors }) => set_completed(&repo, &selectors, false),
         Some(Command::Rm { selectors }) => remove(&repo, &selectors),
+        Some(Command::Compact) => compact(&repo),
         Some(Command::Update) => unreachable!(),
     }
 }
@@ -64,6 +65,12 @@ fn remove<S: Storage>(repo: &TaskRepository<S>, selectors: &[String]) -> Result<
     let ids = cli::expand_selectors(selectors)?;
     let touched = repo.remove(&ids)?;
     print_removed(touched.len());
+    Ok(())
+}
+
+fn compact<S: Storage>(repo: &TaskRepository<S>) -> Result<()> {
+    let n = repo.compact()?;
+    print_compact(n);
     Ok(())
 }
 
@@ -126,4 +133,12 @@ fn print_marked(action: &str, n: usize) {
 
 fn print_removed(n: usize) {
     println!("Removed {} {}.", n, if n == 1 { "task" } else { "tasks" });
+}
+
+fn print_compact(n: usize) {
+    if n == 0 {
+        println!("Nothing to compact.");
+    } else {
+        println!("Compacted {} {}.", n, if n == 1 { "task" } else { "tasks" });
+    }
 }

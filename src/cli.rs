@@ -48,6 +48,8 @@ pub enum Command {
         #[arg(num_args = 1..)]
         selectors: Vec<String>,
     },
+    /// Renumber all tasks sequentially from 1 and reset next_id.
+    Compact,
     /// Self-update: download and install the latest release from GitHub.
     Update,
 }
