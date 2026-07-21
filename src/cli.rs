@@ -20,14 +20,16 @@ pub enum Command {
     /// Add a new task.
     Add {
         /// The task description.
-        description: String,
+        #[arg(num_args = 1.., trailing_var_arg = true)]
+        description: Vec<String>,
     },
     /// Edit a task's description.
     Edit {
         /// The id of the task to edit.
         id: u64,
         /// The new task description.
-        description: String,
+        #[arg(num_args = 1.., trailing_var_arg = true)]
+        description: Vec<String>,
     },
     /// List all tasks, including completed ones.
     All,

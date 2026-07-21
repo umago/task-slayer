@@ -15,8 +15,8 @@ pub fn dispatch(command: Option<Command>) -> Result<()> {
 
     match command {
         None => list_pending(&repo),
-        Some(Command::Add { description }) => add(&repo, description),
-        Some(Command::Edit { id, description }) => edit(&repo, id, description),
+        Some(Command::Add { description }) => add(&repo, description.join(" ")),
+        Some(Command::Edit { id, description }) => edit(&repo, id, description.join(" ")),
         Some(Command::All) => list_all(&repo),
         Some(Command::Done { selectors }) => set_completed(&repo, &selectors, true),
         Some(Command::Undo { selectors }) => set_completed(&repo, &selectors, false),
