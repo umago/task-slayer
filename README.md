@@ -39,17 +39,23 @@ This downloads the latest binary from [GitHub releases](https://github.com/umago
 ### Add a task
 
 ```bash
-tslay add "Buy milk"
+tslay add Buy milk
 ```
 
 ```
 Created task 1.
 ```
 
+Quotes are optional but useful for tasks with special characters:
+
+```bash
+tslay add "Buy 2% milk"
+```
+
 ### Edit a task
 
 ```bash
-tslay edit 1 "Buy oat milk"
+tslay edit 1 Buy oat milk
 ```
 
 ```
