@@ -8,7 +8,7 @@ use clap::{Parser, Subcommand};
     name = "tslay",
     bin_name = "tslay",
     version = crate::VERSION,
-    about = "A small, fast command-line todo manager."
+    about = "A tiny CLI todo manager. Track your quests, slay your tasks."
 )]
 pub struct Cli {
     #[command(subcommand)]

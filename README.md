@@ -1,6 +1,6 @@
 # Task Slayer
 
-A small, fast CLI task-slaying tool. Track your quests, slay your tasks.
+A tiny CLI todo manager. Track your quests, slay your tasks.
 
 ## Install
 
