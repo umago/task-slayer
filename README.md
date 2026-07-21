@@ -121,6 +121,22 @@ tslay rm 1 3-5 8        # mixed
 
 Duplicate task IDs across selectors are ignored.
 
+### Compact task IDs
+
+Over time, deleting tasks can leave gaps in the ID sequence. Use `compact` to
+renumber all remaining tasks sequentially from 1 and reset the ID counter:
+
+```bash
+tslay compact
+```
+
+```
+Compacted 3 tasks.
+```
+
+This is an **opt-in, irreversible** operation — existing task IDs will change.
+Use it when you want tidy, gap-free IDs. Otherwise, IDs are never reused.
+
 ## Storage
 
 Tasks are stored as JSON at:
