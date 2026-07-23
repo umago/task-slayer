@@ -8,9 +8,17 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: "cargo"
+    groups:
+      cargo:
+        patterns:
+          - "*"
 
   # Monitor GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
